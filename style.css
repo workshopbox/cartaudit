@@ -1,55 +1,112 @@
-/* === CartAudit Redesign v2.0 — Amazon Style === */
-/* Fixes the 3-panel layout bug and implements a modern theme. */
+/* === CartAudit — HALLOWEEN EDITION (Design-only) === */
+/* Structure, classes, and IDs are preserved. No JS behavior changed. */
 
-/* -------------------- Amazon Theme & Base -------------------- */
+/* -------------------- Theme Tokens -------------------- */
 :root {
-  --amz-dark-blue: #232F3E;
-  --amz-light-blue: #007185;
-  --amz-orange: #FF9900;
-  --amz-yellow: #FFD814;
-  --amz-yellow-dark: #F0B814;
-  --amz-bg-light: #F0F2F2;
-  --amz-bg-white: #FFFFFF;
-  --amz-text: #0F1111;
-  --amz-border: #DDD;
-  --amz-danger: #D00100;
-  
-  --hl-bag: #FCD34D;       /* Yellow (Bags=1) */
-  --hl-ovs: #F97316;       /* Orange (OVs=3) */
+  --bg-deep: #0b0614;
+  --bg-grad-a: #1c0026;
+  --bg-grad-b: #0b0614;
+
+  --text-primary: #fff5e1;
+  --text-secondary: #d9b8ff;
+
+  --accent-orange: #ff9100;
+  --accent-purple: #6a00ff;
+
+  --card-bg: rgba(40, 20, 60, 0.35);
+  --card-border: rgba(255, 255, 255, 0.12);
+
+  --panel-bg: rgba(30, 10, 40, 0.55);
+  --panel-border: rgba(255,255,255,0.12);
+
+  --topbar-bg: rgba(22, 10, 40, 0.9);
+  --topbar-border: rgba(255,255,255,0.08);
+
+  --button-grad-start: #ff9100;
+  --button-grad-end: #6a00ff;
+  --button-border: rgba(255,255,255,0.25);
+
+  --danger: #ef4444;
+
+  --hl-bag: #FCD34D;
+  --hl-ovs: #F97316;
   --hl-text: #0F1111;
 }
 
-* { 
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-html, body { 
-  height: 100%;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
 body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  background: var(--amz-bg-light);
-  color: var(--amz-text);
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(circle at 30% 20%, var(--bg-grad-a), var(--bg-grad-b) 70%);
+  color: var(--text-primary);
   font-size: 14px;
+  line-height: 1.55;
+  overflow-x: hidden;
+  position: relative;
 }
 
-/* -------------------- Topbar & Actions -------------------- */
+/* Fog + lightning ambience */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+body::before {
+  background: url('https://cdn.jsdelivr.net/gh/karimelb8/assets/fog-layer.svg');
+  background-size: cover;
+  opacity: 0.14;
+  animation: fogDrift 60s linear infinite;
+}
+body::after {
+  background: radial-gradient(circle, rgba(255,255,255,0.10) 10%, transparent 70%);
+  opacity: 0;
+  animation: lightningFlash 13s infinite;
+}
+
+/* -------------------- Topbar -------------------- */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 14px 20px;
-  background: var(--amz-dark-blue);
-  border-bottom: 1px solid #131A22;
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--topbar-border);
+  backdrop-filter: blur(8px);
 }
+
+/* CartAudit Title + Banner Group */
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .topbar h1 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--amz-bg-white);
-  letter-spacing: .3px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent-orange);
+  font-family: 'Nosifer', cursive;
+  letter-spacing: 0.3px;
+  text-shadow: 0 0 14px rgba(255,145,0,0.55);
+  animation: flickerText 3.2s infinite alternate;
+}
+
+/* --- Halloween Banner moved inline left --- */
+#halloween-banner {
+  position: static;
+  font-family: 'Creepster', cursive;
+  font-size: 1.4rem;
+  color: var(--accent-orange);
+  text-shadow: 0 0 15px var(--accent-orange), 0 0 25px var(--accent-purple);
+  animation: floatGlow 4s ease-in-out infinite alternate;
+  pointer-events: none;
+  line-height: 1;
 }
 
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -58,142 +115,129 @@ button {
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  color: var(--amz-text);
-  border: 1px solid #AAB7B8;
-  border-radius: 8px;
+  color: #0d0d0d;
+  border: 1px solid var(--button-border);
+  border-radius: 10px;
   cursor: pointer;
-  background: linear-gradient(to bottom, var(--amz-yellow), var(--amz-yellow-dark));
-  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-  transition: all 0.1s ease;
+  background: linear-gradient(45deg, var(--button-grad-start), var(--button-grad-end));
+  box-shadow: 0 0 16px rgba(255,145,0,0.20);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
 }
 button:hover {
-  background: linear-gradient(to bottom, #F7C602, #F0B814);
-  border-color: #8D979A;
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 0 28px rgba(255,145,0,0.45);
 }
-button.accent { /* PDF Export */
-  background: var(--amz-light-blue);
-  border-color: #005A6B;
+button.accent {
   color: #fff;
+  background: linear-gradient(45deg, #5dc2d1, #0a6a7b);
+  border-color: rgba(93,194,209,0.6);
+  box-shadow: 0 0 16px rgba(93,194,209,0.25);
 }
-button.accent:hover {
-  background: #005A6B;
-}
-button.danger { /* Reset */
-  background: #FFF;
-  border-color: #AAB7B8;
-  color: var(--amz-danger);
-}
-button.danger:hover {
-  background: #FDF2F2;
-  border-color: #C20101;
-  color: #C20101;
-}
+button.accent:hover { box-shadow: 0 0 28px rgba(93,194,209,0.45); }
 
-/* -------------------- Main Layout (THE FIX) -------------------- */
+button.danger {
+  color: #fff;
+  background: linear-gradient(45deg, #d23b3b, #6a0f0f);
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 0 16px rgba(239,68,68,0.25);
+}
+button.danger:hover { box-shadow: 0 0 28px rgba(239,68,68,0.45); }
+
+/* -------------------- Main Layout -------------------- */
 .layout {
   display: grid;
   grid-template-columns: 320px 1fr;
-  grid-template-rows: auto auto; /* Define rows for panels */
+  grid-template-rows: auto auto;
   gap: 16px;
   padding: 16px;
 }
 
-/* Panel 1: Log */
-.layout > .panel:nth-child(1) {
-  grid-column: 1 / 2; /* Column 1 */
-  grid-row: 1 / 3;    /* Span 2 rows */
-}
-/* Panel 2: BufferPlan */
-.layout > .panel:nth-child(2) {
-  grid-column: 2 / 3; /* Column 2 */
-  grid-row: 1 / 2;    /* Row 1 */
-}
-/* Panel 3: BagCount */
-.layout > .panel:nth-child(3) {
-  grid-column: 2 / 3; /* Column 2 */
-  grid-row: 2 / 3;    /* Row 2 */
-}
+.layout > .panel:nth-child(1) { grid-column: 1 / 2; grid-row: 1 / 3; }
+.layout > .panel:nth-child(2) { grid-column: 2 / 3; grid-row: 1 / 2; }
+.layout > .panel:nth-child(3) { grid-column: 2 / 3; grid-row: 2 / 3; }
 
 .panel {
-  background: var(--amz-bg-white);
-  border: 1px solid var(--amz-border);
-  border-radius: 8px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 0 25px rgba(255,145,0,0.18), 0 0 40px rgba(106,0,255,0.12);
+  animation: fadeIn .5s ease-out forwards, flickerLight 6s infinite alternate;
 }
 .panel h2 {
   margin: 0 0 12px 0;
   font-size: 18px;
-  font-weight: 700;
-  color: var(--amz-text);
+  font-weight: 800;
+  color: var(--accent-orange);
+  font-family: 'Nosifer', cursive;
+  text-shadow: 0 0 12px rgba(255,145,0,0.45), 0 0 20px rgba(106,0,255,0.35);
 }
 
 /* -------------------- Log -------------------- */
 .log {
   height: 280px;
   overflow: auto;
-  background: #FAFAFA;
-  border: 1px solid var(--amz-border);
-  border-radius: 6px;
-  padding: 8px;
+  background: rgba(10, 10, 25, 0.65);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 10px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 12px;
-  color: #555;
+  color: var(--text-secondary);
   display: flex;
   flex-direction: column-reverse;
+  box-shadow: inset 0 0 22px rgba(255,145,0,0.08);
 }
-.log > div {
-  padding: 1px 4px;
-}
-
+.log > div { padding: 1px 4px; }
 
 /* -------------------- Wave Grids -------------------- */
-/* This class is on the #buffer-cards and #bag-cards divs */
 .wave-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); /* Responsive columns */
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
   gap: 16px;
 }
 .wave {
-  background: #FDFDFD;
-  border: 1px solid var(--amz-border);
-  border-radius: 6px;
+  background: rgba(15, 10, 25, 0.6);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
   padding: 12px;
+  box-shadow: 0 0 16px rgba(255,145,0,0.15);
 }
 .wave-head {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 16px;
   margin: 0 0 10px 0;
+  color: var(--text-primary);
+  text-shadow: 0 0 10px rgba(255,145,0,0.25);
 }
 
-/* -------------------- Wave Tables -------------------- */
+/* -------------------- Tables -------------------- */
 .wave-table { width: 100%; overflow-x: auto; }
 .wave-table table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--amz-bg-white);
+  background: rgba(24, 16, 36, 0.65);
   margin: 8px 0 4px;
-  table-layout: fixed; /* Use fixed layout */
-  color: var(--amz-text);
+  table-layout: fixed;
+  color: var(--text-primary);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
 }
 .wave-table th, .wave-table td {
-  border: 1px solid var(--amz-border);
-  padding: 6px 8px; /* Added padding */
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 8px 10px;
   font-size: 12px;
-  line-height: 1.4; /* Normal line height */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  vertical-align: middle;
-}
-.wave-table th {
-  background: #F7F7F7;
-  font-weight: 700;
   text-align: left;
 }
-
-/* Column widths (Route, Location, Carts, Bags, OVs, Departed) */
-/* Using 100% total width to work with table-layout: fixed */
+.wave-table th {
+  background: rgba(255, 145, 0, 0.12);
+  font-weight: 700;
+  color: var(--accent-orange);
+}
 .wave-table th:nth-child(1), .wave-table td:nth-child(1) { width: 30%; }
 .wave-table th:nth-child(2), .wave-table td:nth-child(2) { width: 30%; }
 .wave-table th:nth-child(3), .wave-table td:nth-child(3) { width: 10%; text-align: center; }
@@ -201,29 +245,51 @@ button.danger:hover {
 .wave-table th:nth-child(5), .wave-table td:nth-child(5) { width: 10%; text-align: center; }
 .wave-table th:nth-child(6), .wave-table td:nth-child(6) { width: 10%; text-align: center; }
 
-/* Highlights (from script.js) */
 .hl-bag { background: var(--hl-bag); color: var(--hl-text); font-weight:700; }
 .hl-ovs { background: var(--hl-ovs); color: var(--hl-text); font-weight:700; }
+
+/* -------------------- Animations -------------------- */
+@keyframes fogDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 120% 0; }
+}
+@keyframes lightningFlash {
+  0%, 96%, 100% { opacity: 0; }
+  97% { opacity: 0.7; }
+  98% { opacity: 0.2; }
+  99% { opacity: 1; }
+}
+@keyframes floatGlow {
+  from { text-shadow: 0 0 18px var(--accent-orange); transform: translateY(0); }
+  to { text-shadow: 0 0 28px var(--accent-purple); transform: translateY(-4px); }
+}
+@keyframes flickerText {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+  20%, 24%, 55% { opacity: 0.3; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes flickerLight {
+  0%, 100% { box-shadow: 0 0 22px rgba(255,145,0,0.18); }
+  50% { box-shadow: 0 0 32px rgba(255,145,0,0.38); }
+}
 
 /* -------------------- Responsive -------------------- */
 @media (max-width: 1200px) {
   .layout {
-    grid-template-columns: 1fr; /* Stack all panels on top of each other */
+    grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
   }
-  /* All panels go into column 1 and their own row */
-  .layout > .panel:nth-child(1) { grid-column: 1 / 2; grid-row: 1 / 2; }
-  .layout > .panel:nth-child(2) { grid-column: 1 / 2; grid-row: 2 / 3; }
-  .layout > .panel:nth-child(3) { grid-column: 1 / 2; grid-row: 3 / 4; }
+  .layout > .panel:nth-child(1) { grid-row: 1 / 2; }
+  .layout > .panel:nth-child(2) { grid-row: 2 / 3; }
+  .layout > .panel:nth-child(3) { grid-row: 3 / 4; }
 }
 
 @media (max-width: 600px) {
   .topbar { flex-direction: column; gap: 12px; }
-  .layout { padding: 8px; }
-  .panel { padding: 10px; }
-  
-  /* Force 1 column of waves */
-  .wave-grid {
-    grid-template-columns: 1fr;
-  }
+  .layout { padding: 10px; }
+  .panel { padding: 12px; }
+  .wave-grid { grid-template-columns: 1fr; }
 }

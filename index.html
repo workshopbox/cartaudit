@@ -2,16 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>CartAudit — Buffer & BagCount</title>
+  <title>CartAudit — Halloween Edition 🎃</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="style.css" />
-  <!-- jsPDF + AutoTable for PDF export -->
+
+  <!-- jsPDF + AutoTable -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <h1>CartAudit</h1>
+    <div class="title-group">
+      <h1>CartAudit</h1>
+      <div id="halloween-banner">🎃 Happy Halloween 👻</div>
+    </div>
+
     <div class="actions">
       <button id="btn-pick">Load PickOrder</button>
       <input id="file-pick" type="file" accept=".csv" hidden />
