@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CartAudit — Buffer & BagCount</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- jsPDF + AutoTable for PDF export -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>CartAudit</h1>
+    <div class="actions">
+      <button id="btn-pick">Load PickOrder</button>
+      <input id="file-pick" type="file" accept=".csv" hidden />
+      <button id="btn-scc">Load SCCPick</button>
+      <input id="file-scc" type="file" accept=".csv" hidden />
+      <button id="btn-sccproc">Process SCC</button>
+      <button id="btn-buffer">Build Buffer</button>
+      <button id="btn-bagcount">Build BagCount</button>
+      <button id="btn-export-pdf" class="accent">Export PDF</button>
+      <button id="btn-export">Export CSV</button>
+      <button id="btn-reset" class="danger">Reset</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>Log</h2>
+      <div id="log-box" class="log"></div>
+    </section>
+
+    <section class="panel">
+      <h2>BufferPlan (36 rows per wave)</h2>
+      <div id="buffer-cards" class="wave-grid"></div>
+    </section>
+
+    <section class="panel">
+      <h2>BagCount (Full Data)</h2>
+      <div id="bag-cards" class="wave-grid"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
