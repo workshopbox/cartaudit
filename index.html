@@ -5,16 +5,17 @@
   <title>CartAudit — Halloween Edition 🎃</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nosifer&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="style.css" />
 
-  <!-- jsPDF + AutoTable -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
 </head>
 <body>
   <header class="topbar">
@@ -28,12 +29,13 @@
       <input id="file-pick" type="file" accept=".csv" hidden />
       <button id="btn-scc">Load SCCPick</button>
       <input id="file-scc" type="file" accept=".csv" hidden />
-      <button id="btn-sccproc">Process SCC</button>
-      <button id="btn-buffer">Build Buffer</button>
-      <button id="btn-bagcount">Build BagCount</button>
+      
+      <button id="btn-generate" class="accent">Generate CartAudit</button>
+      
       <button id="btn-export-pdf" class="accent">Export PDF</button>
       <button id="btn-export">Export CSV</button>
       <button id="btn-reset" class="danger">Reset</button>
+      <button id="btn-debug" style="background: #ffcc00; color: #000;">Debug Headers</button>
     </div>
   </header>
 

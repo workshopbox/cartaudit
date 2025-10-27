@@ -1,6 +1,5 @@
-/* === CartAudit Smart Script v13.5 — robust parsing, correct math & wave order,
-       strict highlights (value==1 → yellow, value==3 → orange on Bags/OVs ONLY),
-       single CSV, 1-wave-per-page PDF (header-based highlighting) === */
+/* === CartAudit Smart Script v13.7 — REMOVED OLD BUTTON LISTENERS === */
+/* === Based on v13.6, but removes listeners for non-existent buttons === */
 
 /* -------------------- CONFIG -------------------- */
 const HIGHLIGHT_MODE = 'strict13'; // Highlight only when the cell value equals 1 (yellow) or 3 (orange)
@@ -33,6 +32,7 @@ function normalizeWeirdCSV(text) {
     s = s.replace(/^\uFEFF/, ''); // strip BOM
     const t = s.trim();
     if (t.length >= 2 && t[0] === '"' && t[t.length - 1] === '"') {
+      // Basic outer quote stripping
       s = t.slice(1, -1).replace(/""/g, '"');
     }
     out.push(s);
@@ -86,26 +86,54 @@ function resetAll() {
   log('Reset all in-memory data.');
 }
 
-/* -------------------- file loaders -------------------- */
+/* --- ADDED: Robust header normalization helper --- */
+function normHeaderCell(x) {
+  let s = String(x ?? '');
+  s = s.replace(/\ufeff/g, '');   // 1. strip BOM
+  s = s.trim();                   // 2. TRIM WHITESPACE FIRST
+  s = s.replace(/^"+|"+$/g, ''); // 3. THEN STRIP QUOTES
+  s = s.replace(/\s+/g, ' ');    // 4. collapse ALL internal whitespace (newlines, tabs, spaces) to a single space
+  s = s.trim();                   // 5. trim again, just in case
+  s = s.toLowerCase();            // 6. lowercase
+  return s;
+}
+
+/* --- NEW: Header Index Finder --- */
+// Searches cleaned headers for a list of possible variations
+function findHeaderIndex(cleanedHeaders, variations) {
+  for (const variation of variations) {
+    const index = cleanedHeaders.indexOf(variation);
+    if (index !== -1) {
+      return index; // Return index of first match found
+    }
+  }
+  return -1; // Not found
+}
+
+
+/* -------------------- file loaders (Original v13.5 Logic) -------------------- */
 // PickOrder (dispatchTime, routeCode, routeID, dispatchArea)
 document.getElementById('file-pick').addEventListener('change', e => {
   const f = e.target.files[0];
   if (!f) return;
   f.text().then(t => {
-    let raw = normalizeWeirdCSV(t);
+    let raw = normalizeWeirdCSV(t); // Using original normalize
     let head = raw.split(/\r?\n/, 1)[0] || '';
     let delimiter = head.includes(';') ? ';' : (head.includes('\t') ? '\t' : ',');
-    pick = parseCSV(raw, delimiter);
+    pick = parseCSV(raw, delimiter); // Using original parse
 
+    // Original re-parse logic if needed
     if ((pick[0]?.length || 0) === 1 && /",\s*"/.test(head)) {
-      raw = normalizeWeirdCSV(t);
-      head = raw.split(/\r?\n/, 1)[0] || '';
-      delimiter = head.includes(';') ? ';' : (head.includes('\t') ? '\t' : ',');
-      pick = parseCSV(raw, delimiter);
+       log('Re-parsing PickOrder with potential quote issue.');
+       raw = t; // Use original text if normalize failed
+       head = raw.split(/\r?\n/, 1)[0] || '';
+       delimiter = head.includes(';') ? ';' : (head.includes('\t') ? '\t' : ',');
+       pick = parseCSV(raw, delimiter);
     }
 
     log(`Loaded PickOrder: ${pick.length - 1} data rows, delimiter="${delimiter}", cols=${pick[0]?.length || 0}`);
   });
+  e.target.value = null; // Clear input
 });
 
 // SCCPick (Route Code, Picklist Code, …, Bags, OVs, SPR, Progress, Associate, Duration, Type)
@@ -113,46 +141,71 @@ document.getElementById('file-scc').addEventListener('change', e => {
   const f = e.target.files[0];
   if (!f) return;
   f.text().then(t => {
-    let raw = normalizeWeirdCSV(t);
+    let raw = normalizeWeirdCSV(t); // Using original normalize
     let head = raw.split(/\r?\n/, 1)[0] || '';
     let delimiter = head.includes(';') ? ';' : (head.includes('\t') ? '\t' : ',');
-    scc = parseCSV(raw, delimiter);
+    scc = parseCSV(raw, delimiter); // Using original parse
 
+    // Original re-parse logic if needed
     if ((scc[0]?.length || 0) === 1 && /",\s*"/.test(head)) {
-      raw = normalizeWeirdCSV(t);
-      head = raw.split(/\r?\n/, 1)[0] || '';
-      delimiter = head.includes(';') ? ';' : (head.includes('\t') ? '\t' : ',');
-      scc = parseCSV(raw, delimiter);
+       log('Re-parsing SCCPick with potential quote issue.');
+       raw = t; // Use original text if normalize failed
+       head = raw.split(/\r?\n/, 1)[0] || '';
+       delimiter = head.includes(';') ? ';' : (head.includes('\t') ? '\t' : ',');
+       scc = parseCSV(raw, delimiter);
     }
 
     log(`Loaded SCCPick: ${scc.length - 1} data rows, delimiter="${delimiter}", cols=${scc[0]?.length || 0}`);
-
-    const H = scc[0] || [];
-    if (H[0] !== 'Route Code' || H[1] !== 'Picklist Code' || H[10] !== 'Bags' || H[11] !== 'OVs') {
-      log(`⚠️ SCCPick header mismatch. Got: [${H.slice(0, 16).join(' | ')}]`);
-      log('   Expected indices: A=Route Code (0), B=Picklist Code (1), K=Bags (10), L=OVs (11).');
-    }
+    // Removed old useless header check log
   });
+  e.target.value = null; // Clear input
 });
 
-/* -------------------- processing -------------------- */
+/* -------------------- processing (MODIFIED TO FIND COLUMNS BY NAME) -------------------- */
 function processSCC() {
   if (scc.length < 2) { log('Error: Load SCCPick file first.'); return; }
 
   const H = scc[0] || [];
-  if (H[0] !== 'Route Code' || H[1] !== 'Picklist Code' || H[10] !== 'Bags' || H[11] !== 'OVs') {
-    log(`⚠️ SCCPick header check failed before processing. Got: [${H.slice(0, 16).join(' | ')}]`);
-    log('   Fix CSV parsing (quotes) or adjust indices if export changed.');
+  // Ensure H is treated as an array even if parsing resulted in a single string
+  const headerArray = Array.isArray(H) ? H : [H]; 
+  const normH = headerArray.map(normHeaderCell); // Normalize headers
+
+  // === SEARCH FOR VARIATIONS ===
+  const routeVariations    = ['route code', 'routecode'];
+  const picklistVariations = ['picklist code', 'picklistcode'];
+  const bagsVariations     = ['bags']; // Assuming 'bags' is consistent
+  const ovsVariations      = ['ovs', 'ov'];  // Added 'ov' just in case
+
+  const idxRoute    = findHeaderIndex(normH, routeVariations);
+  const idxPicklist = findHeaderIndex(normH, picklistVariations);
+  const idxBags     = findHeaderIndex(normH, bagsVariations);
+  const idxOVs      = findHeaderIndex(normH, ovsVariations);
+  // === END SEARCH ===
+
+  // --- Error Checking ---
+  const missing = [];
+  if (idxRoute === -1)    missing.push(routeVariations.join(' / '));
+  if (idxPicklist === -1) missing.push(picklistVariations.join(' / '));
+  if (idxBags === -1)     missing.push(bagsVariations.join(' / '));
+  if (idxOVs === -1)      missing.push(ovsVariations.join(' / '));
+
+  if (missing.length > 0) {
+    log(`Error: SCCPick file is missing required columns: ${missing.join(', ')}`);
+    log(`       (This is what the script found after cleaning the headers:)`);
+    log(`       Found headers: [${normH.join(' | ')}]`);
+    sccQR = []; // Clear previous results
+    return; // Stop processing
   }
+  // --- End Error Checking ---
 
-  const colA = 0, colB = 1, colK = 10, colL = 11;
-
-  log(`Processing SCCPick. Using columns: A=${colA}, B=${colB}, K=${colK}, L=${colL}`);
+  log(`Processing SCCPick. Using dynamic columns: route code=${idxRoute}, picklist code=${idxPicklist}, bags=${idxBags}, ovs=${idxOVs}`);
 
   const routeSet = new Set();
   for (let i = 1; i < scc.length; i++) {
     const r = scc[i];
-    const route = (r?.[colA] || '').trim();
+    // Add safety check: ensure 'r' is an array before accessing indices
+    if (!Array.isArray(r) || r.length <= idxRoute) continue; 
+    const route = (r[idxRoute] || '').trim(); // Use DYNAMIC index
     if (route) routeSet.add(route);
   }
 
@@ -163,18 +216,18 @@ function processSCC() {
     let carts = 0, bags = 0, ovs = 0;
 
     for (const r of rows) {
-      if (!r) continue;
-      const picklist = (r[colB] || '').trim();
+      if (!Array.isArray(r) || r.length <= Math.max(idxPicklist, idxBags, idxOVs)) continue; 
+      const picklist = (r[idxPicklist] || '').trim(); // Use DYNAMIC index
 
       if (picklist && picklist.startsWith(route + '#')) {
         carts++;
-        const b = Number(String(r[colK] || '0').replace(/[^0-9.-]/g, '')) || 0;
-        const o = Number(String(r[colL] || '0').replace(/[^0-9.-]/g, '')) || 0;
+        // Use DYNAMIC indices
+        const b = Number(String(r[idxBags] || '0').replace(/[^0-9.-]/g, '')) || 0; 
+        const o = Number(String(r[idxOVs] || '0').replace(/[^0-9.-]/g, '')) || 0; 
         bags += b;
         ovs  += o;
       }
     }
-
     out.push([route, carts, bags, ovs]);
   }
 
@@ -183,17 +236,36 @@ function processSCC() {
   log(`SCC processed → ${sccQR.length - 1} routes.`);
 }
 
-/* -------------------- builders / rendering -------------------- */
+/* -------------------- builders / rendering (Original v13.5 Logic, uses indexOf) -------------------- */
+// Added normHeaderCell to PickOrder header lookup
 function buildBuffer() {
   if (pick.length < 2) { log('Error: Load PickOrder first.'); return; }
   if (sccQR.length < 2) { log('Run SCC processing first.'); return; }
 
   const hdr = pick[0] || [];
-  const idxRoute = hdr.indexOf('routeCode');
-  const idxArea  = hdr.indexOf('dispatchArea');
+  const headerArray = Array.isArray(hdr) ? hdr : [hdr]; 
+  const normH = headerArray.map(normHeaderCell); // Normalize PickOrder headers too
+
+  // === SEARCH FOR VARIATIONS in PickOrder ===
+  const routeVariations = ['route code', 'routecode'];
+  const areaVariations  = ['dispatch area', 'dispatcharea'];
+
+  let idxRoute = findHeaderIndex(normH, routeVariations);
+  let idxArea  = findHeaderIndex(normH, areaVariations);
+  // === END SEARCH ===
+  
+  let routeCol = idxRoute;
+  let areaCol = idxArea;
+
   if (idxRoute === -1 || idxArea === -1) {
-    log('⚠️ PickOrder header names not found. Falling back to routeCode=1, dispatchArea=3.');
+    const missing = [];
+    if (idxRoute === -1) missing.push(routeVariations.join(' / '));
+    if (idxArea === -1) missing.push(areaVariations.join(' / '));
+    log(`⚠️ PickOrder header names not found (${missing.join(', ')}). Falling back to columns 1 and 3.`);
+    routeCol = 1; // Fallback
+    areaCol = 3;  // Fallback
   }
+
 
   const cartsMap = new Map();
   for (let i = 1; i < sccQR.length; i++) {
@@ -205,8 +277,9 @@ function buildBuffer() {
   const uniq = [];
   for (let i = 1; i < pick.length; i++) {
     const r = pick[i];
-    const route = (r[idxRoute >= 0 ? idxRoute : 1] || '').trim();
-    const loc   = (r[idxArea  >= 0 ? idxArea  : 3] || '').trim();
+     if (!Array.isArray(r) || r.length <= Math.max(routeCol, areaCol)) continue; 
+    const route = (r[routeCol] || '').trim(); // Use found/fallback index
+    const loc   = (r[areaCol] || '').trim();  // Use found/fallback index
     if (!route || seen.has(route)) continue;
     seen.add(route);
     uniq.push([route, loc, cartsMap.get(route) ?? 0]);
@@ -226,10 +299,27 @@ function buildBagCount() {
   if (sccQR.length < 2) { log('Run SCC processing first.'); return; }
 
   const hdr = pick[0] || [];
-  const idxRoute = hdr.indexOf('routeCode');
-  const idxArea  = hdr.indexOf('dispatchArea');
+   const headerArray = Array.isArray(hdr) ? hdr : [hdr]; 
+  const normH = headerArray.map(normHeaderCell); // Normalize PickOrder headers too
+
+  // === SEARCH FOR VARIATIONS in PickOrder ===
+  const routeVariations = ['route code', 'routecode'];
+  const areaVariations  = ['dispatch area', 'dispatcharea'];
+
+  let idxRoute = findHeaderIndex(normH, routeVariations);
+  let idxArea  = findHeaderIndex(normH, areaVariations);
+  // === END SEARCH ===
+  
+  let routeCol = idxRoute;
+  let areaCol = idxArea;
+
   if (idxRoute === -1 || idxArea === -1) {
-    log('⚠️ PickOrder header names not found. Falling back to routeCode=1, dispatchArea=3.');
+    const missing = [];
+    if (idxRoute === -1) missing.push(routeVariations.join(' / '));
+    if (idxArea === -1) missing.push(areaVariations.join(' / '));
+    log(`⚠️ PickOrder header names not found (${missing.join(', ')}). Falling back to columns 1 and 3.`);
+    routeCol = 1; // Fallback
+    areaCol = 3;  // Fallback
   }
 
   const cartsMap = new Map();
@@ -246,8 +336,9 @@ function buildBagCount() {
   const rows = [];
   for (let i = 1; i < pick.length; i++) {
     const r = pick[i];
-    const route = (r[idxRoute >= 0 ? idxRoute : 1] || '').trim();
-    const loc   = (r[idxArea  >= 0 ? idxArea  : 3] || '').trim();
+     if (!Array.isArray(r) || r.length <= Math.max(routeCol, areaCol)) continue; 
+    const route = (r[routeCol] || '').trim(); // Use found/fallback index
+    const loc   = (r[areaCol] || '').trim();  // Use found/fallback index
     if (!route || seen.has(route)) continue;
     seen.add(route);
     rows.push([route, loc, cartsMap.get(route) ?? 0, bagsMap.get(route) ?? 0, ovsMap.get(route) ?? 0]);
@@ -262,14 +353,14 @@ function buildBagCount() {
   log(`BagCount built: ${bagWaves.length} wave block(s), ${rows.length} total rows.`);
 }
 
-/* -------------------- highlight helper -------------------- */
+/* -------------------- highlight helper (Original) -------------------- */
 function cellClassByValue(v) {
   if (Number(v) === 1) return 'hl-bag';   // yellow for value==1
   if (Number(v) === 3) return 'hl-ovs';   // orange for value==3
   return '';
 }
 
-/* -------------------- render -------------------- */
+/* -------------------- render (Original) -------------------- */
 function renderWaves(waves, showAllCols, targetEl) {
   const cont = targetEl;
   if (!cont) return;
@@ -287,7 +378,11 @@ function renderWaves(waves, showAllCols, targetEl) {
           </tr></thead><tbody>`;
 
     rows.forEach(r => {
+      // Add safety check for 'r' being an array inside the loop too
+      if (!Array.isArray(r)) return; 
+      
       if (showAllCols) {
+        // Assume r has at least 5 elements after processing
         const bags = Number(r[3] ?? 0);
         const ovs  = Number(r[4] ?? 0);
         html += `<tr>
@@ -299,6 +394,7 @@ function renderWaves(waves, showAllCols, targetEl) {
           <td></td>
         </tr>`;
       } else {
+         // Assume r has at least 3 elements after processing
         html += `<tr>
           <td>${escapeHtml(r[0] || '')}</td>
           <td>${escapeHtml(r[1] || '')}</td>
@@ -313,15 +409,21 @@ function renderWaves(waves, showAllCols, targetEl) {
   cont.innerHTML = html;
 }
 
-/* -------------------- export (single wide CSV) -------------------- */
+/* -------------------- export (Original, maybe needs check?) -------------------- */
+// This *might* fail if buildBagCount hasn't run, let's add the checks from later versions
 function exportCSV() {
-  if (!bagWaves.length) {
-    if (pick.length < 2 || sccQR.length < 2) {
-      log('Nothing to export. Load files and build BagCount first.');
-      return;
-    }
-    buildBagCount();
+  if (pick.length < 2 || scc.length < 2) {
+    log('Nothing to export. Load files and generate CartAudit first.');
+    return;
   }
+  if (!bagWaves.length) {
+    log('Building data before export...');
+    processSCC(); // Ensure SCC is processed
+    if (sccQR.length === 0) { log('Processing failed. Stopping export.'); return; }
+    buildBagCount(); // Ensure BagCount is built
+     if (!bagWaves.length) { log('Build failed. Stopping export.'); return; }
+  }
+
 
   const waves = bagWaves;
   const perWaveCols = 6;
@@ -345,8 +447,8 @@ function exportCSV() {
   for (let r = 0; r < maxRows; r++) {
     const line = [];
     for (let w = 0; w < waves.length; w++) {
-      const item = waves[w][r];
-      if (item) {
+      const item = waves[w]?.[r]; // Add safety check
+      if (item && Array.isArray(item)) { // Add safety check
         line.push(item[0] ?? '', item[1] ?? '', item[2] ?? 0, item[3] ?? 0, item[4] ?? 0, '');
       } else {
         line.push('', '', '', '', '', '');
@@ -360,15 +462,19 @@ function exportCSV() {
   log('Exported: CartAudit_BagCount_View.csv');
 }
 
-/* -------------------- export PDF (1 wave per page) -------------------- */
-/* Uses header-based highlighting so we never miss Bags due to column index quirks */
+/* -------------------- export PDF (Original, maybe needs check?) -------------------- */
+// Add safety checks
 async function exportPDF() {
+   if (pick.length < 2 || scc.length < 2) {
+    log('Nothing to export. Load files and generate CartAudit first.');
+    return;
+  }
   if (!bagWaves.length) {
-    if (pick.length < 2 || sccQR.length < 2) {
-      log('Nothing to export. Load files and build BagCount first.');
-      return;
-    }
+    log('Building data before export...');
+    processSCC();
+    if (sccQR.length === 0) { log('Processing failed. Stopping export.'); return; }
     buildBagCount();
+     if (!bagWaves.length) { log('Build failed. Stopping export.'); return; }
   }
 
   const { jsPDF } = window.jspdf;
@@ -390,11 +496,11 @@ async function exportPDF() {
     doc.text(`Wave ${w + 1}`, left, topTitle);
 
     const head = [['Route Code','Location','Carts','Bags','OVs','Departed']];
-    const body = rows.map(r => [
+    const body = rows.map(r => Array.isArray(r) ? [ // Add safety check
       String(r[0] ?? ''), String(r[1] ?? ''),
       String(r[2] ?? 0),  String(r[3] ?? 0),
       String(r[4] ?? 0),  ''
-    ]);
+    ] : ['','','','','','']); // Provide default if row is bad
 
     for (let fill = rows.length; fill < 36; fill++) body.push(['','','','','','']);
 
@@ -450,11 +556,60 @@ async function exportPDF() {
 }
 
 /* -------------------- buttons -------------------- */
+// Attach clicks only to buttons that exist in the *current* HTML
 document.getElementById('btn-pick').onclick      = () => document.getElementById('file-pick').click();
 document.getElementById('btn-scc').onclick       = () => document.getElementById('file-scc').click();
 document.getElementById('btn-reset').onclick     = resetAll;
-document.getElementById('btn-sccproc').onclick   = processSCC;
-document.getElementById('btn-buffer').onclick    = buildBuffer;
-document.getElementById('btn-bagcount').onclick  = buildBagCount;
+
+// Combined generate button logic
+document.getElementById('btn-generate').onclick = () => {
+  if (pick.length === 0 || scc.length === 0) {
+    log('Error: Both files must be loaded first.');
+    return;
+  }
+  processSCC(); // This now finds columns dynamically
+  if (sccQR.length === 0) {
+    log('Processing failed. Stopping build.');
+    return;
+  }
+  buildBuffer();
+   if (bufferWaves.length === 0 && pick.length > 1) { 
+      log('Build Buffer failed. Stopping.');
+      return;
+  }
+  buildBagCount();
+};
+
 document.getElementById('btn-export').onclick    = exportCSV;
 document.getElementById('btn-export-pdf').onclick = exportPDF;
+
+// Keep Debug button if it exists in the HTML
+const debugBtn = document.getElementById('btn-debug');
+if (debugBtn) {
+    debugBtn.onclick = function debugHeaders() {
+      log('--- DEBUGGING HEADERS ---');
+      
+      if (pick.length > 0) {
+        const H = pick[0] || [];
+        const headerArray = Array.isArray(H) ? H : [H]; 
+        const normH = headerArray.map(normHeaderCell);
+        log('PickOrder Headers (Cleaned):');
+        log(`[${normH.join(' | ')}]`);
+      } else {
+        log('PickOrder file is not loaded or is empty.');
+      }
+
+      if (scc.length > 0) {
+        const H = scc[0] || [];
+        const headerArray = Array.isArray(H) ? H : [H]; 
+        const normH = headerArray.map(normHeaderCell);
+        log('SCCPick Headers (Cleaned):');
+        log(`[${normH.join(' | ')}]`);
+      } else {
+        log('SCCPick file is not loaded or is empty.');
+      }
+      log('--- END DEBUG ---');
+    }
+} else {
+    log('Debug button not found in HTML.');
+}
