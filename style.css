@@ -1,36 +1,41 @@
-/* === CartAudit — HALLOWEEN EDITION (Design-only) === */
-/* Structure, classes, and IDs are preserved. No JS behavior changed. */
+/* === CartAudit — Winter UI === */
+/* Structure, classes, and IDs are preserved. */
 
 /* -------------------- Theme Tokens -------------------- */
 :root {
-  --bg-deep: #0b0614;
-  --bg-grad-a: #1c0026;
-  --bg-grad-b: #0b0614;
+  --bg-deep: #1a202c; /* Dark Slate */
+  --bg-grad-a: #1a202c;
+  --bg-grad-b: #111827; /* Darker Slate */
 
-  --text-primary: #fff5e1;
-  --text-secondary: #d9b8ff;
+  --text-primary: #e2e8f0; /* Light Gray */
+  --text-secondary: #94a3b8; /* Medium Gray */
 
-  --accent-orange: #ff9100;
-  --accent-purple: #6a00ff;
+  --accent-blue: #38bdf8;  /* Sky Blue */
+  --accent-cyan: #22d3ee;  /* Cyan */
 
-  --card-bg: rgba(40, 20, 60, 0.35);
-  --card-border: rgba(255, 255, 255, 0.12);
+  --panel-bg: #2d3748; /* Lighter Slate */
+  --panel-border: rgba(255, 255, 255, 0.1);
 
-  --panel-bg: rgba(30, 10, 40, 0.55);
-  --panel-border: rgba(255,255,255,0.12);
+  --topbar-bg: rgba(26, 32, 44, 0.85); /* Dark Slate bg */
+  --topbar-border: rgba(255, 255, 255, 0.1);
 
-  --topbar-bg: rgba(22, 10, 40, 0.9);
-  --topbar-border: rgba(255,255,255,0.08);
+  --button-bg: #f8fafc; /* Button White */
+  --button-text: #1e293b; /* Button Text Dark */
+  --button-border: rgba(255, 255, 255, 0.1);
 
-  --button-grad-start: #ff9100;
-  --button-grad-end: #6a00ff;
-  --button-border: rgba(255,255,255,0.25);
+  --button-accent-bg: #0ea5e9; /* Sky Blue */
+  --button-accent-hover: #0284c7; /* Darker Sky Blue */
+  
+  --button-secondary-bg: #475569; /* Slate */
+  --button-secondary-hover: #64748b; /* Lighter Slate */
 
-  --danger: #ef4444;
+  --danger-bg: #e11d48; /* Rose */
+  --danger-hover: #be123c; /* Darker Rose */
+  --danger-text: #fff;
 
-  --hl-bag: #FCD34D;
-  --hl-ovs: #F97316;
-  --hl-text: #0F1111;
+  --hl-bag: #fef08a; /* Yellow */
+  --hl-ovs: #fb923c; /* Orange */
+  --hl-text: #1e293b; /* Dark text for highlights */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,7 +43,7 @@ html, body { height: 100%; }
 
 body {
   font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  background: radial-gradient(circle at 30% 20%, var(--bg-grad-a), var(--bg-grad-b) 70%);
+  background: linear-gradient(140deg, var(--bg-grad-a), var(--bg-grad-b) 70%);
   color: var(--text-primary);
   font-size: 14px;
   line-height: 1.55;
@@ -46,26 +51,7 @@ body {
   position: relative;
 }
 
-/* Fog + lightning ambience */
-body::before,
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-}
-body::before {
-  background: url('https://cdn.jsdelivr.net/gh/karimelb8/assets/fog-layer.svg');
-  background-size: cover;
-  opacity: 0.14;
-  animation: fogDrift 60s linear infinite;
-}
-body::after {
-  background: radial-gradient(circle, rgba(255,255,255,0.10) 10%, transparent 70%);
-  opacity: 0;
-  animation: lightningFlash 13s infinite;
-}
+/* Removed fog + lightning ambience */
 
 /* -------------------- Topbar -------------------- */
 .topbar {
@@ -77,9 +63,12 @@ body::after {
   background: var(--topbar-bg);
   border-bottom: 1px solid var(--topbar-border);
   backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-/* CartAudit Title + Banner Group */
+/* CartAudit Title */
 .title-group {
   display: flex;
   align-items: center;
@@ -88,61 +77,64 @@ body::after {
 
 .topbar h1 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--accent-orange);
-  font-family: 'Nosifer', cursive;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Poppins', sans-serif;
   letter-spacing: 0.3px;
-  text-shadow: 0 0 14px rgba(255,145,0,0.55);
-  animation: flickerText 3.2s infinite alternate;
 }
 
-/* --- Halloween Banner moved inline left --- */
-#halloween-banner {
-  position: static;
-  font-family: 'Creepster', cursive;
-  font-size: 1.4rem;
-  color: var(--accent-orange);
-  text-shadow: 0 0 15px var(--accent-orange), 0 0 25px var(--accent-purple);
-  animation: floatGlow 4s ease-in-out infinite alternate;
-  pointer-events: none;
-  line-height: 1;
-}
+/* --- Removed Halloween Banner --- */
 
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 button {
-  padding: 8px 12px;
+  padding: 8px 14px;
   font-family: inherit;
   font-size: 13px;
-  font-weight: 700;
-  color: #0d0d0d;
-  border: 1px solid var(--button-border);
-  border-radius: 10px;
+  font-weight: 600;
+  color: var(--button-text);
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  background: linear-gradient(45deg, var(--button-grad-start), var(--button-grad-end));
-  box-shadow: 0 0 16px rgba(255,145,0,0.20);
-  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  background: var(--button-bg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
 button:hover {
   transform: translateY(-2px);
-  filter: brightness(1.05);
-  box-shadow: 0 0 28px rgba(255,145,0,0.45);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
+
+/* Primary "Generate" button */
 button.accent {
   color: #fff;
-  background: linear-gradient(45deg, #5dc2d1, #0a6a7b);
-  border-color: rgba(93,194,209,0.6);
-  box-shadow: 0 0 16px rgba(93,194,209,0.25);
+  background: var(--button-accent-bg);
+  box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
 }
-button.accent:hover { box-shadow: 0 0 28px rgba(93,194,209,0.45); }
+button.accent:hover { 
+  background: var(--button-accent-hover);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* Secondary "Debug" button */
+button.secondary {
+  color: #fff;
+  background: var(--button-secondary-bg);
+}
+button.secondary:hover { 
+  background: var(--button-secondary-hover);
+}
+
 
 button.danger {
-  color: #fff;
-  background: linear-gradient(45deg, #d23b3b, #6a0f0f);
-  border-color: rgba(255,255,255,0.18);
-  box-shadow: 0 0 16px rgba(239,68,68,0.25);
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.2);
 }
-button.danger:hover { box-shadow: 0 0 28px rgba(239,68,68,0.45); }
+button.danger:hover { 
+  background: var(--danger-hover);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+}
 
 /* -------------------- Main Layout -------------------- */
 .layout {
@@ -160,36 +152,36 @@ button.danger:hover { box-shadow: 0 0 28px rgba(239,68,68,0.45); }
 .panel {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 0 25px rgba(255,145,0,0.18), 0 0 40px rgba(106,0,255,0.12);
-  animation: fadeIn .5s ease-out forwards, flickerLight 6s infinite alternate;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .panel h2 {
   margin: 0 0 12px 0;
   font-size: 18px;
-  font-weight: 800;
-  color: var(--accent-orange);
-  font-family: 'Nosifer', cursive;
-  text-shadow: 0 0 12px rgba(255,145,0,0.45), 0 0 20px rgba(106,0,255,0.35);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'Poppins', sans-serif;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 10px;
 }
 
 /* -------------------- Log -------------------- */
 .log {
   height: 280px;
   overflow: auto;
-  background: rgba(10, 10, 25, 0.65);
+  background: var(--bg-grad-b);
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 10px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 12px;
   color: var(--text-secondary);
   display: flex;
   flex-direction: column-reverse;
-  box-shadow: inset 0 0 22px rgba(255,145,0,0.08);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
 }
-.log > div { padding: 1px 4px; }
+.log > div { padding: 1px 4px; border-bottom: 1px solid rgba(255,255,255,0.03);}
 
 /* -------------------- Wave Grids -------------------- */
 .wave-grid {
@@ -198,18 +190,17 @@ button.danger:hover { box-shadow: 0 0 28px rgba(239,68,68,0.45); }
   gap: 16px;
 }
 .wave {
-  background: rgba(15, 10, 25, 0.6);
+  background: var(--bg-deep);
   border: 1px solid var(--panel-border);
   border-radius: 10px;
   padding: 12px;
-  box-shadow: 0 0 16px rgba(255,145,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 .wave-head {
-  font-weight: 800;
+  font-weight: 600;
   font-size: 16px;
   margin: 0 0 10px 0;
   color: var(--text-primary);
-  text-shadow: 0 0 10px rgba(255,145,0,0.25);
 }
 
 /* -------------------- Tables -------------------- */
@@ -217,15 +208,16 @@ button.danger:hover { box-shadow: 0 0 28px rgba(239,68,68,0.45); }
 .wave-table table {
   width: 100%;
   border-collapse: collapse;
-  background: rgba(24, 16, 36, 0.65);
+  background: var(--panel-bg);
   margin: 8px 0 4px;
   table-layout: fixed;
   color: var(--text-primary);
   border: 1px solid var(--panel-border);
   border-radius: 8px;
+  overflow: hidden;
 }
 .wave-table th, .wave-table td {
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--panel-border);
   padding: 8px 10px;
   font-size: 12px;
   white-space: nowrap;
@@ -234,9 +226,9 @@ button.danger:hover { box-shadow: 0 0 28px rgba(239,68,68,0.45); }
   text-align: left;
 }
 .wave-table th {
-  background: rgba(255, 145, 0, 0.12);
-  font-weight: 700;
-  color: var(--accent-orange);
+  background: rgba(56, 189, 248, 0.1);
+  font-weight: 600;
+  color: var(--accent-blue);
 }
 .wave-table th:nth-child(1), .wave-table td:nth-child(1) { width: 30%; }
 .wave-table th:nth-child(2), .wave-table td:nth-child(2) { width: 30%; }
@@ -245,36 +237,15 @@ button.danger:hover { box-shadow: 0 0 28px rgba(239,68,68,0.45); }
 .wave-table th:nth-child(5), .wave-table td:nth-child(5) { width: 10%; text-align: center; }
 .wave-table th:nth-child(6), .wave-table td:nth-child(6) { width: 10%; text-align: center; }
 
+.wave-table tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
 .hl-bag { background: var(--hl-bag); color: var(--hl-text); font-weight:700; }
 .hl-ovs { background: var(--hl-ovs); color: var(--hl-text); font-weight:700; }
 
-/* -------------------- Animations -------------------- */
-@keyframes fogDrift {
-  0% { background-position: 0 0; }
-  100% { background-position: 120% 0; }
-}
-@keyframes lightningFlash {
-  0%, 96%, 100% { opacity: 0; }
-  97% { opacity: 0.7; }
-  98% { opacity: 0.2; }
-  99% { opacity: 1; }
-}
-@keyframes floatGlow {
-  from { text-shadow: 0 0 18px var(--accent-orange); transform: translateY(0); }
-  to { text-shadow: 0 0 28px var(--accent-purple); transform: translateY(-4px); }
-}
-@keyframes flickerText {
-  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-  20%, 24%, 55% { opacity: 0.3; }
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes flickerLight {
-  0%, 100% { box-shadow: 0 0 22px rgba(255,145,0,0.18); }
-  50% { box-shadow: 0 0 32px rgba(255,145,0,0.38); }
-}
+/* -------------------- Animations (Removed) -------------------- */
+/* All Halloween animations removed */
 
 /* -------------------- Responsive -------------------- */
 @media (max-width: 1200px) {
